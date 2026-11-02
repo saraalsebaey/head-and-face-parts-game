@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Touch Your Face! 🌟</title>
+    <style>
+        :root {
+            --primary: #4FA8F7;
+            --bg: #F9FAFB;
+            --text: #333;
+        }
+        body {
+            font-family: 'Comic Sans MS', 'Chalkboard SE', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            touch-action: manipulation;
+        }
+        h1 {
+            color: var(--primary);
+            margin-bottom: 5px;
+        }
+        h2 {
+            font-size: 1.2rem;
+            color: #666;
+            margin-top: 0;
+        }
+        .header-bar {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            max-width: 500px;
+            margin-bottom: 20px;
+        }
+        .score {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #F59E0B;
+        }
+        .btn-audio {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .btn-audio:active {
+            transform: scale(0.95);
+        }
+        .question-container {
+            background: white;
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            width: 100%;
+            max-width: 500px;
+            margin-bottom: 20px;
+        }
+        .question-text {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        
+        /* Main Face Screen */
+        .face-container {
+            position: relative;
+            width: 100%;
+            max-width: 320px;
+            margin: 0 auto;
+            display: none;
+        }
+        .face-image {
+            width: 100%;
+            height: auto;
+            border-radius: 20px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        /* Sprite Grid for Picture Answers */
+        .answers-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            width: 100%;
+            max-width: 500px;
+        }
+        .answer-card {
+            background: white;
+            border: 4px solid #E5E7EB;
+            border-radius: 15px;
+            height: 130px;
+            cursor: pointer;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: transform 0.2s, border-color 0.2s;
+            padding: 5px;
+        }
+        .answer-card:active {
+            transform: scale(0.95);
+        }
+        .answer-card.correct {
+            border-color: #10B981;
+            background-color: #D1FAE5;
+        }
+        .answer-card.wrong {
+            border-color: #EF4444;
+            background-color: #FEE2E2;
+        }
+        
+        /* CSS Sprite implementation */
+        .sprite {
+            width: 110px;
+            height: 110px;
+            background-image: url('IMG_7084_b9ff36.jpeg'); 
+            background-size: 300% 400%; 
+            background-repeat: no-repeat;
+            border-radius: 8px;
+        }
+
+        /* Coordinate mapping for 3 columns (0%, 50%, 100%) and 4 rows (0%, 33.3%, 66.6%, 100%) */
+        .sprite-eyes { background-position: 0% 0%; }
+        .sprite-nose { background-position: 50% 0%; }
+        .sprite-ears { background-position: 100% 0%; }
+        
+        .sprite-mouth { background-position: 0% 33.333%; }
+        .sprite-hair { background-position: 50% 33.333%; }
+        .sprite-cheek { background-position: 100% 33.333%; }
+        
+        .sprite-eyebrow { background-position: 0% 66.667%; }
+        .sprite-eyelashes { background-position: 50% 66.667%; }
+        .sprite-forehead { background-position: 100% 66.667%; }
+        
+        .sprite-lips { background-position: 0% 100%; }
+        .sprite-chin { background-position: 50% 100%; }
+        .sprite-jaw { background-position: 100% 100%; }
+
+        .feedback {
+            font-size: 1.5rem;
+            font-weight: bold;
+            height: 30px;
+            margin-top: 15px;
+        }
+        .feedback.success { color: #10B981; }
+        .feedback.error { color: #EF4444; }
+
+        .btn-start {
+            background-color: #10B981;
+            color: white;
+            border: none;
+            border-radius: 30px;
+            padding: 15px 40px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header-bar">
+        <button class="btn-audio" onclick="playCurrentAudio()" aria-label="Play Audio">🔊</button>
+        <div class="score">⭐ <span id="scoreDisplay">0</span></div>
+    </div>
+
+    <h1>Touch Your Face! 🌟</h1>
+    <h2 id="levelSubtitle">Let's learn the parts of our face!</h2>
+
+    <!-- Start Screen -->
+    <div id="startScreen" class="face-container" style="display: block;">
+        <img src="IMG_7083_b9ff36.jpeg" class="face-image" alt="Cartoon Child Face">
+        <button class="btn-start" onclick="startGame()">Start Playing!</button>
+    </div>
+
+    <!-- Question Container -->
+    <div id="gameScreen" style="display: none; width: 100%; max-width: 500px;">
+        <div class="question-container">
+            <div class="question-text" id="questionText">Question goes here?</div>
+        </div>
+        <div class="answers-grid" id="answersGrid">
+            <!-- Cards injected via JS -->
+        </div>
+        <div id="feedbackText" class="feedback"></div>
+    </div>
+
+    <script>
+        let score = 0;
+        let currentQuestionIndex = 0;
+        let currentAudioText = "";
+        let questions = [];
+
+        const parts = [
+            { id: "eyes", class: "sprite-eyes", name: "Eyes" },
+            { id: "nose", class: "sprite-nose", name: "Nose" },
+            { id: "ears", class: "sprite-ears", name: "Ears" },
+            { id: "mouth", class: "sprite-mouth", name: "Mouth" },
+            { id: "hair", class: "sprite-hair", name: "Hair" },
+            { id: "cheek", class: "sprite-cheek", name: "Cheek" },
+            { id: "eyebrow", class: "sprite-eyebrow", name: "Eyebrows" },
+            { id: "eyelashes", class: "sprite-eyelashes", name: "Eyelashes" },
+            { id: "lips", class: "sprite-lips", name: "Lips" },
+            { id: "chin", class: "sprite-chin", name: "Chin" }
+        ];
+
+        const functionsData = [
+            { q: "What do we smell with?", ans: "nose" },
+            { q: "What do we see with?", ans: "eyes" },
+            { q: "What do we hear with?", ans: "ears" },
+            { q: "What do we eat with?", ans: "mouth" },
+            { q: "What protects our eyes from dust?", ans: "eyelashes" },
+            { q: "What do we use to speak?", ans: "mouth" }
+        ];
+
+        function speak(text) {
+            currentAudioText = text;
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.rate = 0.85; 
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        function playCurrentAudio() {
+            if (currentAudioText) speak(currentAudioText);
+        }
+
+        function generateLevel1() {
+            let qList = [];
+            let shuffledParts = [...parts].sort(() => 0.5 - Math.random()).slice(0, 5);
+            shuffledParts.forEach(part => {
+                let options = [part];
+                while(options.length < 4) {
+                    let randomPart = parts[Math.floor(Math.random() * parts.length)];
+                    if(!options.find(o => o.id === randomPart.id)) options.push(randomPart);
+                }
+                qList.push({
+                    text: `Find the ${part.name}!`,
+                    correct: part.id,
+                    options: options.sort(() => 0.5 - Math.random())
+                });
+            });
+            return qList;
+        }
+
+        function generateLevel2() {
+            let qList = [];
+            functionsData.forEach(item => {
+                let correctPart = parts.find(p => p.id === item.ans);
+                let options = [correctPart];
+                while(options.length < 4) {
+                    let randomPart = parts[Math.floor(Math.random() * parts.length)];
+                    if(!options.find(o => o.id === randomPart.id)) options.push(randomPart);
+                }
+                qList.push({
+                    text: item.q,
+                    correct: correctPart.id,
+                    options: options.sort(() => 0.5 - Math.random())
+                });
+            });
+            return qList.sort(() => 0.5 - Math.random());
+        }
+
+        function startGame() {
+            score = 0;
+            document.getElementById('scoreDisplay').innerText = score;
+            document.getElementById('startScreen').style.display = 'none';
+            document.getElementById('gameScreen').style.display = 'block';
+            
+            questions = [...generateLevel1(), ...generateLevel2()];
+            currentQuestionIndex = 0;
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            if (currentQuestionIndex >= questions.length) {
+                endGame();
+                return;
+            }
+
+            const q = questions[currentQuestionIndex];
+            document.getElementById('questionText').innerText = q.text;
+            document.getElementById('feedbackText').innerText = "";
+            document.getElementById('feedbackText').className = "feedback";
+            
+            speak(q.text);
+
+            const grid = document.getElementById('answersGrid');
+            grid.innerHTML = "";
+            
+            q.options.forEach(opt => {
+                const card = document.createElement('div');
+                card.className = 'answer-card';
+                card.onclick = () => checkAnswer(opt.id, q.correct, card);
+                
+                const sprite = document.createElement('div');
+                sprite.className = `sprite ${opt.class}`;
+                
+                card.appendChild(sprite);
+                grid.appendChild(card);
+            });
+        }
+
+        function checkAnswer(selectedId, correctId, cardElement) {
+            const feedback = document.getElementById('feedbackText');
+            if (selectedId === correctId) {
+                feedback.innerText = "Great job! ⭐";
+                feedback.className = "feedback success";
+                cardElement.classList.add('correct');
+                score++;
+                document.getElementById('scoreDisplay').innerText = score;
+                speak("Great job!");
+                
+                setTimeout(() => {
+                    currentQuestionIndex++;
+                    loadQuestion();
+                }, 1500);
+            } else {
+                feedback.innerText = "Try again!";
+                feedback.className = "feedback error";
+                cardElement.classList.add('wrong');
+                speak("Try again!");
+                
+                setTimeout(() => {
+                    cardElement.classList.remove('wrong');
+                }, 800);
+            }
+        }
+
+        function endGame() {
+            document.getElementById('gameScreen').style.display = 'none';
+            document.getElementById('startScreen').style.display = 'block';
+            document.getElementById('levelSubtitle').innerText = `You finished with ${score} stars!`;
+            speak(`Yay! You finished with ${score} stars!`);
+            document.querySelector('.btn-start').innerText = "Play Again!";
+        }
+    </script>
+</body>
+</html>
